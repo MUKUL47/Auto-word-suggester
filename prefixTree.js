@@ -50,6 +50,9 @@ function main(data){
                     newHead.addChild(child)
                     newHead = child                    
                 } 
+                if (splitIt.length === currentPos) {
+                    newHead.setNephew();
+                }
             }
             //Since old trie has been editied with 1/ more branches old one will be overwritten
             D[headPosition] = newGrandFather
@@ -92,9 +95,13 @@ class Character{
     constructor(character){
         this.char = character
         this.children = new Array()
+        this.found = false;
     }
-    addChild(character){
-        this.children.push(character)
+    addChild(character) {
+        this.children.push(character);
+    }
+    setNephew() {
+        this.found = true;
     }
 }
 
