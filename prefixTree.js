@@ -1,24 +1,14 @@
-(async function f(){
-    let d = Date.now()
-    //Extract the data preprocess it (exclude spaces, length >= 3 etc)
-    let data = await new Promise((resolve)=>{
-        require('fs').readFile("words.txt",'utf-8',(err,data)=>{
-            let woN = data.split('\n'), arr = new Array()
-            for( let i = 0 ; i <woN.length; i++ ){
-                let word = woN[i].split(' ')
-                if( word.length === 1 && woN[i].trim().length !== 0) arr.push(woN[i].substring(0,woN[i].length-1).toLowerCase())
-            }
-            resolve(arr)
-         })
-    })
+module.exports.getSuffixes = function(){
+    return dataPreprocess().then(data => main(data));
+}
 
-   
-    let D = new Array()
-
+function main(data){
+    return new Promise( resolve => {
+        let D = new Array()
     for( let i = 0; i < data.length; i++ ){
         let splitIt = data[i].split(''), 
          head = splitIt[0],
-         headPosition = checkHead(head),
+         headPosition = checkHead(head, D),
          currentPos = 1
          /* 
          abc, abd, bcd
@@ -63,15 +53,13 @@
             }
             //Since old trie has been editied with 1/ more branches old one will be overwritten
             D[headPosition] = newGrandFather
-        }
-                
+        }       
     }
+    resolve(D);
+    })
+}
 
-    let word = 'su'
-    console.log(guessWord(suggestWord(word),word))
-
-
-function checkHead(character){
+function checkHead(character, D){
     for( let i = 0; i < D.length; i++ ){
         if( D[i].char === character ) return i
     }
@@ -85,88 +73,20 @@ function verifyLayer(Node, character){
     return -1
 }
 
-function randWordPicker(){
-    let position = Math.floor(Math.random()*10);
-        currentChar =  D[position],           
-        finalString = "";
-    finalString += currentChar.char;
-        while(currentChar.children.length > 0){            
-            let child = 
-            currentChar.children[Math.floor(Math.random()*currentChar.children.length)]
-            finalString += child.char
-            currentChar = child  
-        }
-        return finalString
-}
-
-
-function suggestWord(prefix){
-    if( prefix.length < 2 ) return []    
-    var getPostion = (character, level) =>{
-        if(level === undefined){
-            for( let i = 0; i < D.length; i++ ){
-                if( D[i].char === character ){
-                    return i
-                }            
+//Extract the data preprocess it (exclude spaces, length >= 3 etc)
+function dataPreprocess(){
+    return new Promise((resolve)=>{
+        require('fs').readFile("words.txt",'utf-8',(err,data)=>{
+            let woN = data.split('\n'), arr = new Array()
+            for( let i = 0 ; i <woN.length; i++ ){
+                let word = woN[i].split(' ')
+                if( word.length === 1 && woN[i].trim().length !== 0) arr.push(woN[i].substring(0,woN[i].length-1).toLowerCase())
             }
-        }else{  
-            let i = -1     
-            while( ++i < level.length ){
-                if( level[i].char === character ){
-                    return i
-                }
-            }            
-        }
-        return -1
-    }
-    let i = 0,
-        a = []
-            let c = getPostion(prefix.charAt(i++),undefined) 
-            a.push(c)    
-            let currentChild = D[c].children
-            while( i < prefix.length ){
-                c = getPostion(prefix.charAt(i++),currentChild)
-                if( c === -1 ) return []
-                a.push(c)
-                currentChild = currentChild[c].children                                
-            }
-             return a
+            if(err) reject(err);
+                    resolve(arr)
+         })
+    })
 }
-
-function guessWord(prerequisites, prefix){
-    if( prerequisites === [] ) return "No word found"
-    let head = D[prerequisites[0]].children,
-        i = 1;
-        while( i < prerequisites.length ){
-            head = head[prerequisites[i++]].children
-        }
-        let suffixes = new Set()
-
-        let set = ()=>{
-            let position = Math.floor(Math.random()*head.length);
-         currentChar =  head[position],
-         finalString = "";
-         finalString += currentChar.char;
-        while(currentChar.children.length > 0){            
-            let child = 
-            currentChar.children[Math.floor(Math.random()*currentChar.children.length)]
-            finalString += child.char
-            currentChar = child  
-        }
-        return finalString
-        }
-
-
-        for(let i = 0; i < 10; i++){
-            suffixes.add(prefix+set())
-        }
-
-
-        return suffixes
-
-}
-
-}())
 
 class Character{
     constructor(character){
