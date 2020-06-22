@@ -5,9 +5,13 @@ let D;
 socket.on('gotTrainedData', data => D = data );
 
 $(document).ready( function(){
+    setTimeout(() => {
+        // console.log(JSON.stringify(D))
+    },555)
     document.getElementById('word').onkeyup = function(){
         let word =  document.getElementById('word').value.toLowerCase()
-        let guessedWord = guessWord(suggestWord(word), word)
+        const wS = suggestWord(word)
+        let guessedWord = guessWord(wS, word)
         if (guessedWord.length === 0 || word.length === 0) {
             $("p").html("");
         }
@@ -65,39 +69,24 @@ $(document).ready( function(){
     function guessWord(prerequisites, prefix) {
         if (prerequisites === []) return "No word found"
         else {
-            try {
-                let head = D[prerequisites[0]].children,
-                    i = 1;
-                while (i < prerequisites.length) {
-                    head = head[prerequisites[i++]].children
+                let lastChild =  D[prerequisites[0]]
+                let index = 1
+                while(prefix.length > 1 && prefix.charAt(index) && lastChild){
+                    const clonedChildren = Object.assign({},lastChild)
+                    lastChild = clonedChildren['children'].filter(c => c['char'] == prefix.charAt(index))[0]
+                    index++
                 }
-                let suffixes = new Set()
-    
-                let set = () => {
-                    let position = Math.floor(Math.random() * head.length);
-                    currentChar = head[position],
-                        finalString = "";
-                    finalString += currentChar.char,
-                        isNephew = false
-                    while (currentChar.children.length > 0 && !isNephew) {
-                        let child =
-                            currentChar.children[Math.floor(Math.random() * currentChar.children.length)]
-                        finalString += child.char
-                        currentChar = child
-                        if (child.found) {
-                            isNephew = !isNephew
-                        }
-                    }
-                    return finalString
-                }
-    
-                for (let i = 0; i < 10000; i++) {
-                    suffixes.add(prefix + set())
-                }
-                return [...suffixes]
-            } catch (err) {
-                return []
-            }
+                if(!lastChild) return [];
+                let visitedNodes = []
+                const verticies = [...lastChild['children']];
+                while(verticies.length > 0){
+                const currentNode = verticies.shift()
+                    currentNode['children'].forEach(node => {
+                        visitedNodes.push(node.word)
+                        verticies.push(node)
+                    })
+                } 
+                return visitedNodes
         }
     
     }

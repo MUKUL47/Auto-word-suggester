@@ -3,6 +3,7 @@ module.exports.getSuffixes = function(){
 }
 
 function main(data){
+    const keyStore = {}
     return new Promise( resolve => {
         let D = new Array()
     for( let i = 0; i < data.length; i++ ){
@@ -26,18 +27,22 @@ function main(data){
           [ b -> [ c -> [ d ]]]  will be simply stored  
          */
         if( headPosition === -1 ){            
-            let grandFather = new Character(head),
-                newHead = grandFather                
+            let grandFather = new Character(head)
+                console.log('grand=',grandFather.char)
+                newHead = grandFather  
                 while(splitIt[currentPos]){   
                     //simply loop through characters and append to each other                         
                     let child = new Character(splitIt[currentPos++])
                     newHead.addChild(child)
                     newHead = child
+                    if(!splitIt[currentPos]){
+                        child.setWord(data[i])
+                    }
                 }
                 D.push(grandFather)
         }else{
             let newGrandFather = D[headPosition],
-                newHead = newGrandFather
+                newHead = newGrandFather  
             while(splitIt[currentPos]){ 
                 //check if that layer of children has that same character
                 let isSameChild = verifyLayer(newHead, splitIt[currentPos])
@@ -48,16 +53,19 @@ function main(data){
                     //Else create new child and append to previous node
                     let child = new Character(splitIt[currentPos++])
                     newHead.addChild(child)
-                    newHead = child                    
+                    newHead = child   
+                    if(!splitIt[currentPos]){
+                        child.setWord(data[i])
+                    }
                 } 
-                if (splitIt.length === currentPos) {
-                    newHead.setNephew();
-                }
             }
             //Since old trie has been editied with 1/ more branches old one will be overwritten
             D[headPosition] = newGrandFather
         }       
     }
+    setTimeout(() => {
+        console.log(keyStore)
+    })
     resolve(D);
     })
 }
@@ -83,10 +91,10 @@ function dataPreprocess(){
             let woN = data.split('\n'), arr = new Array()
             for( let i = 0 ; i <woN.length; i++ ){
                 let word = woN[i].split(' ')
-                if( word.length === 1 && woN[i].trim().length !== 0) arr.push(woN[i].substring(0,woN[i].length-1).toLowerCase())
+                if( word.length === 1 && woN[i].trim().length !== 0) arr.push(woN[i].substring(0,woN[i].length).toLowerCase())
             }
             if(err) reject(err);
-                    resolve(arr)
+                    resolve(woN.filter(word => word.trim().length > 2))
          })
     })
 }
@@ -95,13 +103,14 @@ class Character{
     constructor(character){
         this.char = character
         this.children = new Array()
-        this.found = false;
+        this.word = '';
+        this.id = `${Math.random()}`.substr(2)
     }
     addChild(character) {
         this.children.push(character);
     }
-    setNephew() {
-        this.found = true;
+    setWord(word) {
+        this.word = word;
     }
 }
 
