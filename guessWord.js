@@ -1,17 +1,19 @@
 
-var socket = io("http://localhost:3000");
-let D;
+var socket = io("https://autowordsuggestor.herokuapp.com");
+let D, dataGotTrained = false
 socket.on('gotTrainedData', data => {
+    dataGotTrained = true;
     D = data
     document.getElementById('word').onkeyup = function(){
+        if(!dataGotTrained) return
         let word =  document.getElementById('word').value.trim().toLowerCase()
         let guessedWord = getAllWordsFromPrefix(suggestWord(word), word)
         if (guessedWord.length === 0 || word.length === 0) {
-            document.querySelector("p").innerHTML = ''
+            document.querySelector("#words").innerHTML = ''
             document.querySelector("span").innerHTML = '0 result'
             return
         }
-        document.querySelector("p").innerHTML = `<h2>${guessedWord.join(', ')}</h2>`
+        document.querySelector("#words").innerHTML = `<h2>${guessedWord.join(', ')}</h2>`
         document.querySelector("span").innerHTML = `${guessedWord.length} result${guessedWord.length > 1 ? 's' : ''}`
     }
     
@@ -81,5 +83,29 @@ socket.on('gotTrainedData', data => {
     
     }
 
+    document.querySelector('#file').addEventListener('change',function(evt){
+        var f = evt.target.files[0]; 
+        if (f){
+            var r = new FileReader();
+              r.onload = function(e){     
+                dataGotTrained = false;
+                socket.emit('trainCustomData', e.target.result)
+                document.querySelector("#words").innerHTML = ''
+                document.querySelector("span").innerHTML = '0 result'
+                document.querySelector("#word").value = ''
+                document.querySelector('button').style.display = 'block'
+            };
+            r.readAsText(f);
+        } 
+    })
 } );
+
+function resetDataset(){
+    socket.emit('getTrainedData');
+    document.querySelector("#words").innerHTML = ''
+    document.querySelector("span").innerHTML = '0 result'
+    document.querySelector("#word").value = ''
+    document.querySelector('button').style.display = 'done'
+    document.querySelector('#file').value = ''
+}
 socket.emit('getTrainedData');

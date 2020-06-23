@@ -2,6 +2,10 @@ module.exports.getSuffixes = function(){
     return dataPreprocess().then(data => main(data));
 }
 
+module.exports.trainCustomData = function(data){
+    return main(data.split('\n').filter(word => { if(word.trim().length > 2) { return word.toLocaleLowerCase().trim() } }))
+}
+
 function main(data){
     const keyStore = {}
     return new Promise( resolve => {
@@ -89,7 +93,7 @@ function dataPreprocess(){
     return new Promise((resolve)=>{
         require('fs').readFile("words.txt",'utf-8',(err,data)=>{
             if(err) {reject(err); return}
-            resolve(woN.filter(word => { if(word.trim().length > 2) { return word.toLocaleLowerCase().trim() } }))
+            resolve(data.split('\n').filter(word => { if(word.trim().length > 2) { return word.toLocaleLowerCase().trim() } }))
          })
     })
 }

@@ -10,8 +10,15 @@
                      type="text" id="word" placeholder="Start typing..."
                     width="100" height="100"
                     />  
-            <div><span style="font-size: 23px;"></span></div>
-           <div style="overflow: auto; max-height: 75%;"><p></p></div>
+            <div>
+                <span style="font-size: 23px;"></span>
+            </div>
+            <div>
+                <p>Upload dataset : <input id= 'file' type="file" />
+                    <button style="position: absolute;top:0;" onclick='resetDataset()' hidden>Reset</button>
+                </p>
+            </div>
+           <div style="overflow: auto; max-height: 70%;"><p id='words'></p></div>
     </body> 
     <script src="guessWord.js"></script>
 </html>
