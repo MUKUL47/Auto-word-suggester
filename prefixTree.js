@@ -88,13 +88,8 @@ function verifyLayer(Node, character){
 function dataPreprocess(){
     return new Promise((resolve)=>{
         require('fs').readFile("words.txt",'utf-8',(err,data)=>{
-            let woN = data.split('\n'), arr = new Array()
-            for( let i = 0 ; i <woN.length; i++ ){
-                let word = woN[i].split(' ')
-                if( word.length === 1 && woN[i].trim().length !== 0) arr.push(woN[i].substring(0,woN[i].length).toLowerCase())
-            }
-            if(err) reject(err);
-                    resolve(woN.filter(word => word.trim().length > 2))
+            if(err) {reject(err); return}
+            resolve(woN.filter(word => { if(word.trim().length > 2) { return word.toLocaleLowerCase().trim() } }))
          })
     })
 }

@@ -1,37 +1,19 @@
 
 var socket = io("http://localhost:3000");
-socket.emit('getTrainedData');
 let D;
-socket.on('gotTrainedData', data => D = data );
-
-$(document).ready( function(){
-    setTimeout(() => {
-        // console.log(JSON.stringify(D))
-    },555)
+socket.on('gotTrainedData', data => {
+    D = data
     document.getElementById('word').onkeyup = function(){
-        let word =  document.getElementById('word').value.toLowerCase()
-        const wS = suggestWord(word)
-        let guessedWord = guessWord(wS, word)
+        let word =  document.getElementById('word').value.trim().toLowerCase()
+        let guessedWord = getAllWordsFromPrefix(suggestWord(word), word)
         if (guessedWord.length === 0 || word.length === 0) {
-            $("p").html("");
+            document.querySelector("p").innerHTML = ''
+            document.querySelector("span").innerHTML = '0 result'
+            return
         }
-        $("p").html(`<h2>${guessedWord.join(', ')}</h2>`);
+        document.querySelector("p").innerHTML = `<h2>${guessedWord.join(', ')}</h2>`
+        document.querySelector("span").innerHTML = `${guessedWord.length} result${guessedWord.length > 1 ? 's' : ''}`
     }
-    
-    function randWordPicker() {
-        let position = Math.floor(Math.random() * 10);
-        currentChar = D[position],
-            finalString = "";
-        finalString += currentChar.char;
-        while (currentChar.children.length > 0) {
-            let child =
-                currentChar.children[Math.floor(Math.random() * currentChar.children.length)]
-            finalString += child.char
-            currentChar = child
-        }
-        return finalString
-    }
-    
     
     function suggestWord(prefix) {
         if (prefix.length < 1) return []
@@ -66,28 +48,38 @@ $(document).ready( function(){
         return a
     }
     
-    function guessWord(prerequisites, prefix) {
+    function getAllWordsFromPrefix(prerequisites, prefix) {
         if (prerequisites === []) return "No word found"
-        else {
-                let lastChild =  D[prerequisites[0]]
-                let index = 1
-                while(prefix.length > 1 && prefix.charAt(index) && lastChild){
-                    const clonedChildren = Object.assign({},lastChild)
-                    lastChild = clonedChildren['children'].filter(c => c['char'] == prefix.charAt(index))[0]
-                    index++
-                }
-                if(!lastChild) return [];
-                let visitedNodes = []
-                const verticies = [...lastChild['children']];
-                while(verticies.length > 0){
-                const currentNode = verticies.shift()
-                    currentNode['children'].forEach(node => {
-                        visitedNodes.push(node.word)
-                        verticies.push(node)
-                    })
-                } 
-                return visitedNodes
+        let lastChild =  D[prerequisites[0]]
+        let index = 1
+        while(prefix.length > 1 && prefix.charAt(index) && lastChild){
+            const clonedChildren = Object.assign({},lastChild)
+            lastChild = clonedChildren['children'].filter(c => c['char'] == prefix.charAt(index))[0]
+            index++
         }
+        if(!lastChild) return [];
+        let visitedNodes = []
+        const verticies = [...lastChild['children']];
+        verticies.forEach(node => {
+            if(node.word.length > 1){
+                visitedNodes.push(node.word)
+            }
+            verticies.push(node)
+        })
+        while(verticies.length > 0){
+            const currentNode = verticies.shift()
+            currentNode['children'].forEach(node => {
+                if(node.word.length > 1){
+                    visitedNodes.push(node.word)
+                }
+                verticies.push(node)
+            })
+        } 
+        const nonDuplicates = new Set()
+        visitedNodes.forEach(v => nonDuplicates.add(v.trim().toLowerCase()))
+        return Array.from(nonDuplicates)
     
     }
-})
+
+} );
+socket.emit('getTrainedData');
